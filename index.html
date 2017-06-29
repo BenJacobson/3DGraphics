@@ -6,10 +6,70 @@
 </canvas>
 
 <script>
+    function Cube(x, z) {
+        this.verts = [
+            [x-1, 1, z-1],
+            [x+1, 1, z-1],
+            [x+1,-1, z-1],
+            [x-1,-1, z-1],
+            [x-1, 1, z+1],
+            [x+1, 1, z+1],
+            [x+1,-1, z+1],
+            [x-1,-1, z+1]
+        ];
+
+        this.edges = [
+            [0, 1],
+            [0, 3],
+            [0, 4],
+            [1, 2],
+            [1, 5],
+            [2, 3],
+            [2, 6],
+            [3, 7],
+            [4, 5],
+            [4, 7],
+            [5, 6],
+            [6, 7]
+        ];
+    };
+
+    Cube.prototype.show = function(context, cam) {
+        console.log('show');
+        let xOff = canvas.width / 2;
+        let yOff = canvas.height / 2;
+
+        context.fillStyle = '#BBBBFF';
+
+    	points = this.verts.map(vert => {
+            let x, y, z;
+            [x, y, z] = vert.map(v => v);
+            x -= cam.x;
+            y -= cam.y;
+            z -= cam.z;
+            [x, z] = rotate(x, z, cam.rotx)
+            let f = 100 / (z + 5);
+            x *= f;
+            y *= f;
+            return [x + xOff, y + yOff]
+        });
+
+        this.edges.forEach(edge => {
+            context.beginPath();
+            let x1, y1, x2, y2;
+            [x1, y1] = points[edge[0]];
+            [x2, y2] = points[edge[1]];
+            context.moveTo(x1, y1);
+            context.lineTo(x2, y2);
+            context.stroke();
+        });
+    };
+
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     var cam = {x: 0, y: 0, z: -5, rotx: 0, roty: 0};
     var keys = {}
+    var cubes = [new Cube(0, 0), new Cube(0, 2), new Cube(0, 4)];
 
     document.body.onkeydown = (event) => {
         keys[event.key] = true;
@@ -18,32 +78,6 @@
     document.body.onkeyup = (event) => {
         keys[event.key] = false;
     };
-
-    verts = [
-        [-1, 1, -1],
-        [ 1, 1, -1],
-        [1,  -1, -1],
-        [-1, -1,  -1],
-        [-1, 1, 1],
-        [ 1, 1, 1],
-        [1,  -1, 1],
-        [-1, -1,  1]
-    ];
-
-    edges = [
-        [0, 1],
-        [0, 3],
-        [0, 4],
-        [1, 2],
-        [1, 5],
-        [2, 3],
-        [2, 6],
-        [3, 7],
-        [4, 5],
-        [4, 7],
-        [5, 6],
-        [6, 7]
-    ];
 
     function rotate(x, y, rad) {
         s = Math.sin(rad);
@@ -76,39 +110,14 @@
             cam.rotx -= 0.1;
         }
 
-        let xOff = canvas.width / 2;
-        let yOff = canvas.height / 2;
-
     	context.fillStyle = '#333344';
     	context.fillRect(0, 0, canvas.width, canvas.height);
 
-        context.fillStyle = '#BBBBFF';
-
-    	points = verts.map(vert => {
-            let x, y, z;
-            [x, y, z] = vert.map(v => v);
-            x -= cam.x;
-            y -= cam.y;
-            z -= cam.z;
-            // [x, z] = rotate(x, z, cam.rotx)
-            let f = 100 / (z + 5);
-            x *= f;
-            y *= f;
-            return [x + xOff, y + yOff]
-            // context.beginPath();
-            // context.arc(x + xOff, y + yOff, 4, 0, 2*Math.PI);
-            // context.fill();
+        console.log('begin show cubes');
+        cubes.forEach(cube => {
+            cube.show(context, cam);
         });
-
-        edges.forEach(edge => {
-            context.beginPath();
-            let x1, y1, x2, y2;
-            [x1, y1] = points[edge[0]];
-            [x2, y2] = points[edge[1]];
-            context.moveTo(x1, y1);
-            context.lineTo(x2, y2);
-            context.stroke();
-        });
+        console.log('end show cubes');
     };
 
     render();
