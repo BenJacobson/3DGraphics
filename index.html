@@ -1,0 +1,36 @@
+<html>
+<body style="margin: 0px">
+
+<canvas id="canvas">
+
+</canvas>
+
+<script>
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
+
+function render() {
+	requestAnimationFrame(render);
+
+	context.fillStyle = '#333344';
+	context.fillRect(0, 0, canvas.width, canvas.height);
+
+	context.fillStyle = '#884488';
+	context.fillRect(100, 100, 200, 200 );
+};
+
+render();
+
+document.body.onresize = () => {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+};
+
+window.onload = () => {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+}
+</script>
+
+</body>
+</html
