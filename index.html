@@ -35,11 +35,10 @@
     };
 
     Cube.prototype.show = function(context, cam) {
-        console.log('show');
         let xOff = canvas.width / 2;
         let yOff = canvas.height / 2;
 
-        context.fillStyle = '#BBBBFF';
+        context.strokeStyle = '#BBBBFF';
 
     	points = this.verts.map(vert => {
             let x, y, z;
@@ -48,7 +47,9 @@
             y -= cam.y;
             z -= cam.z;
             [x, z] = rotate(x, z, cam.rotx)
-            let f = 100 / (z + 5);
+            if (z <= 0)
+                return null
+            let f = 100 / z;
             x *= f;
             y *= f;
             return [x + xOff, y + yOff]
@@ -56,9 +57,13 @@
 
         this.edges.forEach(edge => {
             context.beginPath();
+            let p1 = points[edge[0]];
+            let p2 = points[edge[1]];
+            if (p1 == null || p2 == null)
+                return
             let x1, y1, x2, y2;
-            [x1, y1] = points[edge[0]];
-            [x2, y2] = points[edge[1]];
+            [x1, y1] = p1;
+            [x2, y2] = p2;
             context.moveTo(x1, y1);
             context.lineTo(x2, y2);
             context.stroke();
@@ -97,27 +102,30 @@
         if (keys['d']) {
             let x, z;
             [x, z] = rotate(0.1, 0, cam.rotx);
+            console.log(x, z);
             cam.x += x;
             cam.z += z
         }
         if (keys['a']) {
-            cam.x -= 0.1;
+            let x, z;
+            [x, z] = rotate(0.1, 0, cam.rotx);
+            console.log(x, z);
+            cam.x -= x;
+            cam.z -= z
         }
         if (keys['q']) {
-            cam.rotx += 0.1;
+            cam.rotx += 0.01;
         }
         if (keys['e']) {
-            cam.rotx -= 0.1;
+            cam.rotx -= 0.01;
         }
 
     	context.fillStyle = '#333344';
     	context.fillRect(0, 0, canvas.width, canvas.height);
 
-        console.log('begin show cubes');
         cubes.forEach(cube => {
             cube.show(context, cam);
         });
-        console.log('end show cubes');
     };
 
     render();
