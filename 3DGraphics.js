@@ -135,9 +135,12 @@ var cam = {x: 0, y: -1.3, z: 0, rotx: 0, roty: 0};
 
 function newRow() {
     let row = [];
-    for (let i = -30; i <= 30; i += 2) {
+    for (let i = -30; i <= 0; i += 2) {
         if (Math.random() < 0.2) {
             row.push(new Cube(cam.x + i, 0, cam.z + 100));
+        }
+        if (Math.random() < 0.2) {
+            row.push(new Cube(cam.x - i, 0, cam.z + 100));
         }
     }
     return row;
@@ -193,25 +196,32 @@ function rotate(x, y, rad) {
 
 function render() {
 
+    requestAnimationFrame(render);
+
+    if (done) {
+        if (keys[' ']) {
+            done = false;
+            cubeRows = [newRow()];
+            score = 0;
+        }
+        return;
+    }
+
     addMovement();
     cam.z += 1;
     if (cam.z % 10 == 0) {
         if (cubeRows.length == 10) {
-            ++score;
             let row = cubeRows.pop();
             if (row.some(cube => cube.isCentered())) {
                 done = true;
+                context.font="40px Georgia";
+                context.textAlign = 'center';
+                context.fillText("You got " + score + " points. Space-bar to restart", canvas.width / 2 - 40, canvas.height / 4);
+                return;
             }
+            ++score;
         }
         cubeRows.splice(0, 0, newRow());
-    }
-
-    if (!done) {
-        requestAnimationFrame(render);
-    } else {
-        context.font="40px Georgia";
-        context.fillText("Score: " + score, canvas.width / 2 - 40, canvas.height / 4);
-        return;
     }
 
     // sky
@@ -227,6 +237,10 @@ function render() {
             cube.show(canvas, context, cam);
         });
     });
+
+    context.font="20px Georgia";
+    context.textAlign = 'center';
+    context.fillText("Score: " + score, 50, 30);
 };
 
 document.body.onresize = () => {
