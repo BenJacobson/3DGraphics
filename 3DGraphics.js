@@ -1,10 +1,29 @@
 let pm;
+let xViewMin = -1, xViewMax = 1, yViewMin = -1, yViewMax = 1;
+let done = false;
+let score = 0;
 
 function updateWindowSize(canvas) {
     pm = projectionMatrix(0, canvas.width, 0, canvas.height, 1, 100);
+    let aspectRatio = canvas.width / canvas.height;
+    if (aspectRatio > 1) {
+        xViewMin = -1 * aspectRatio;
+        xViewMax = 1 * aspectRatio;
+        yViewMin = -1;
+        yViewMax = 1;
+    } else {
+        xViewMin = -1;
+        xViewMax = 1;
+        yViewMin = -1 / aspectRatio;
+        yViewMax = 1 / aspectRatio;
+    }
 }
 
 function Cube(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+
     this.verts = [
         [x-1, y+1, z-1],
         [x+1, y+1, z-1],
@@ -64,17 +83,33 @@ Cube.prototype.show = function(canvas, context, cam) {
         x = near * x / z;
         y = near * y / z;
 
-        if (x > 1 || x < -1 || y > 1 || y < -1)
+        if (x > xViewMax || x < xViewMin || y > yViewMax || y < yViewMin)
             return null;
 
-        x += 1;
-        y += 1;
+        x += xViewMax;
+        y += yViewMax;
 
-        x *= canvas.width / 2;
-        y *= canvas.height / 2;
+        x *= canvas.width / (2 * xViewMax);
+        y *= canvas.height / (2 * yViewMax);
 
         return [x, y];
     });
+
+    if (points.some(p => p === null))
+         return;
+
+    for (let i = 0; i < this.sides.length; i++) {
+        let side = this.sides[i];
+        let [endx, endy] = points[side[side.length - 1]];
+        context.fillStyle = '#111144'; // this.colors[i];
+        context.beginPath();
+        context.moveTo(endx, endy);
+        side.forEach(pointi => {
+            let [pointx, pointy] = points[pointi];
+            context.lineTo(pointx, pointy);
+        });
+        context.fill();
+    };
 
     this.edges.forEach(edge => {
         let p1 = points[edge[0]];
@@ -89,28 +124,29 @@ Cube.prototype.show = function(canvas, context, cam) {
         context.lineTo(x2, y2);
         context.stroke();
     });
-
-    for (let i = 0; i < this.sides.length; i++) {
-        let side = this.sides[i];
-        if (side.some(pi => points[pi] === null))
-            continue;
-        let [endx, endy] = points[side[side.length - 1]];
-        context.fillStyle = this.colors[i];
-        context.beginPath();
-        context.moveTo(endx, endy);
-        side.forEach(pointi => {
-            let [pointx, pointy] = points[pointi];
-            context.lineTo(pointx, pointy);
-        });
-        context.fill();
-    };
 };
+
+Cube.prototype.isCentered = function() {
+    let x = this.x - cam.x;
+    return -1 <= x && x <= 1;
+}
+
+var cam = {x: 0, y: -1.3, z: 0, rotx: 0, roty: 0};
+
+function newRow() {
+    let row = [];
+    for (let i = -30; i <= 30; i += 2) {
+        if (Math.random() < 0.2) {
+            row.push(new Cube(cam.x + i, 0, cam.z + 100));
+        }
+    }
+    return row;
+}
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
-var cam = {x: 0, y: -1, z: 0, rotx: 0, roty: 0};
 var keys = {}
-var cubes = [new Cube(0, 0, 5), new Cube(5, 5, 5)];
+var cubeRows = [newRow()];
 
 document.body.onkeydown = (event) => {
     keys[event.key] = true;
@@ -129,14 +165,14 @@ function addMovement() {
     }
     if (keys['d']) {
         let x, z;
-        [x, z] = rotate(0.2, 0, cam.rotx);
+        [x, z] = rotate(0.3, 0, cam.rotx);
         console.log(x, z);
         cam.x += x;
         cam.z += z
     }
     if (keys['a']) {
         let x, z;
-        [x, z] = rotate(0.2, 0, cam.rotx);
+        [x, z] = rotate(0.3, 0, cam.rotx);
         console.log(x, z);
         cam.x -= x;
         cam.z -= z
@@ -156,16 +192,40 @@ function rotate(x, y, rad) {
 }
 
 function render() {
-    requestAnimationFrame(render);
 
     addMovement();
+    cam.z += 1;
+    if (cam.z % 10 == 0) {
+        if (cubeRows.length == 10) {
+            ++score;
+            let row = cubeRows.pop();
+            if (row.some(cube => cube.isCentered())) {
+                done = true;
+            }
+        }
+        cubeRows.splice(0, 0, newRow());
+    }
 
-    // background
-    context.fillStyle = '#333344';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    if (!done) {
+        requestAnimationFrame(render);
+    } else {
+        context.font="40px Georgia";
+        context.fillText("Score: " + score, canvas.width / 2 - 40, canvas.height / 4);
+        return;
+    }
 
-    cubes.forEach(cube => {
-        cube.show(canvas, context, cam);
+    // sky
+    context.fillStyle = '#B0E2FF';
+    context.fillRect(0, 0, canvas.width, canvas.height/2);
+
+    // ground
+    context.fillStyle = '#7D441D';
+    context.fillRect(0, canvas.height/2, canvas.width, canvas.height);
+
+    cubeRows.forEach(cubes => {
+        cubes.forEach(cube => {
+            cube.show(canvas, context, cam);
+        });
     });
 };
 
