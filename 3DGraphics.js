@@ -1,7 +1,7 @@
 let pm;
 let xViewMin = -1, xViewMax = 1, yViewMin = -1, yViewMax = 1;
-let done = false;
-let score = 0;
+let velocity = 0;
+let acceleration = 0;
 
 function updateWindowSize(canvas) {
     pm = projectionMatrix(0, canvas.width, 0, canvas.height, 1, 100);
@@ -77,7 +77,7 @@ Cube.prototype.show = function(canvas, context, cam) {
         x -= cam.x;
         y -= cam.y;
         z -= cam.z;
-        [x, z] = rotate(x, z, cam.rotx);
+        [x, z] = rotate(x, z, cam.roty);
         if (z < near)
             return null;
         x = near * x / z;
@@ -149,7 +149,7 @@ function newRow() {
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var keys = {}
-var cubeRows = [newRow()];
+var cubes = [new Cube(0, 0, 10), new Cube(0, 0, -10), new Cube(10, 0, 0), new Cube(-10, 0, 0)];
 
 document.body.onkeydown = (event) => {
     keys[event.key] = true;
@@ -161,30 +161,54 @@ document.body.onkeyup = (event) => {
 
 function addMovement() {
     if (keys['w']) {
-        cam.z += 0.15;
+        let x, z;
+        z = Math.sin(cam.roty + Math.PI/2);
+        x = -Math.cos(cam.roty + Math.PI/2);
+        cam.x += x;
+        cam.z += z
     }
     if (keys['s']) {
-        cam.z -= 0.15;
+        let x, z;
+        z = Math.sin(cam.roty + Math.PI/2);
+        x = -Math.cos(cam.roty + Math.PI/2);
+        cam.x -= x;
+        cam.z -= z
     }
     if (keys['d']) {
         let x, z;
-        [x, z] = rotate(0.3, 0, cam.rotx);
-        console.log(x, z);
+        z = -Math.sin(cam.roty);
+        x = Math.cos(cam.roty);
         cam.x += x;
         cam.z += z
     }
     if (keys['a']) {
         let x, z;
-        [x, z] = rotate(0.3, 0, cam.rotx);
-        console.log(x, z);
+        z = -Math.sin(cam.roty);
+        x = Math.cos(cam.roty);
         cam.x -= x;
         cam.z -= z
     }
-    if (keys['q']) {
-        cam.rotx += 0.05;
+    if (keys['ArrowLeft']) {
+        cam.roty -= 0.05;
     }
-    if (keys['e']) {
-        cam.rotx -= 0.05;
+    if (keys['ArrowRight']) {
+        cam.roty += 0.05;
+    }
+    if (keys['ArrowUp']) {
+        cam.roty -= 0.05;
+    }
+    if (keys['ArrowDown']) {
+        cam.roty += 0.05;
+    }
+    if (keys[' '] && cam.y == -1.3) {
+        velocity = -1;
+        acceleration = 0.1;
+    }
+    cam.y += velocity;
+    velocity += acceleration
+    if (cam.y > -1.3) {
+        cam.y = -1.3;
+        acceleration = velocity = 0;
     }
 }
 
@@ -198,31 +222,7 @@ function render() {
 
     requestAnimationFrame(render);
 
-    if (done) {
-        if (keys[' ']) {
-            done = false;
-            cubeRows = [newRow()];
-            score = 0;
-        }
-        return;
-    }
-
     addMovement();
-    cam.z += 1;
-    if (cam.z % 10 == 0) {
-        if (cubeRows.length == 10) {
-            let row = cubeRows.pop();
-            if (row.some(cube => cube.isCentered())) {
-                done = true;
-                context.font="40px Georgia";
-                context.textAlign = 'center';
-                context.fillText("You got " + score + " points. Space-bar to restart", canvas.width / 2 - 40, canvas.height / 4);
-                return;
-            }
-            ++score;
-        }
-        cubeRows.splice(0, 0, newRow());
-    }
 
     // sky
     context.fillStyle = '#B0E2FF';
@@ -232,15 +232,9 @@ function render() {
     context.fillStyle = '#7D441D';
     context.fillRect(0, canvas.height/2, canvas.width, canvas.height);
 
-    cubeRows.forEach(cubes => {
-        cubes.forEach(cube => {
-            cube.show(canvas, context, cam);
-        });
+    cubes.forEach(cube => {
+        cube.show(canvas, context, cam);
     });
-
-    context.font="20px Georgia";
-    context.textAlign = 'center';
-    context.fillText("Score: " + score, 50, 30);
 };
 
 document.body.onresize = () => {
