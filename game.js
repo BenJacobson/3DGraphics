@@ -1,0 +1,135 @@
+function Game() {
+    this.canvas = document.createElement('canvas');
+    document.body.append(this.canvas);
+    this.context = this.canvas.getContext('2d');
+    this.keysPressed = {};
+    this.cam = new Camara();
+    this.projector = new Projector(0, 0, 2, 250);
+    this.velocity = 0;
+    this.acceleration = 0;
+
+    this.models = [new Cube(0, 0, 10), new Cube(0, 0, -10), new Cube(10, 0, 0), new Cube(-10, 0, 0)];
+
+    document.body.onkeydown = (event) => {
+        this.keysPressed[event.key] = true;
+    };
+
+    document.body.onkeyup = (event) => {
+        this.keysPressed[event.key] = false;
+    };
+
+    document.body.onresize = () => {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.projector.updateAspect(this.canvas.width, this.canvas.height);
+    };
+
+    window.onload = () => {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.projector.updateAspect(this.canvas.width, this.canvas.height);
+        this.render();
+    }
+}
+
+Game.prototype.tick = function() {
+    if (this.keysPressed['w']) {
+        this.cam.moveForward();
+    }
+    if (this.keysPressed['s']) {
+        this.cam.moveBackward();
+    }
+    if (this.keysPressed['d']) {
+        this.cam.moveRight();
+    }
+    if (this.keysPressed['a']) {
+        this.cam.moveLeft();
+    }
+    if (this.keysPressed['ArrowLeft']) {
+        this.cam.rotateLeft();
+    }
+    if (this.keysPressed['ArrowRight']) {
+        this.cam.rotateRight();
+    }
+    if (this.keysPressed['ArrowUp']) {
+        
+    }
+    if (this.keysPressed['ArrowDown']) {
+        
+    }
+    if (this.keysPressed[' '] && this.cam.y == -1.3) {
+        this.velocity = -1;
+        this.acceleration = 0.1;
+    }
+
+    this.cam.y += this.velocity;
+    this.velocity += this.acceleration
+    if (this.cam.y > -1.3) {
+        this.cam.y = -1.3;
+        this.acceleration = this.velocity = 0;
+    }
+}
+
+Game.prototype.show = function(model) {
+    this.context.strokeStyle = '#BBBBFF';
+
+    let points = model.verts.map(worldVec => {
+        let viewVec = this.cam.lookAt(worldVec);
+        let projectedVec = this.projector.project(viewVec)
+        return projectedVec;
+    });
+
+    if (points.some(p => p === null))
+         return;
+
+    for (let i = 0; i < model.sides.length; i++) {
+        let side = model.sides[i];
+        let [endx, endy] = points[side[side.length - 1]];
+        this.context.fillStyle = '#111144'; // this.colors[i];
+        this.context.beginPath();
+        this.context.moveTo(endx, endy);
+        side.forEach(pointi => {
+            let [pointx, pointy] = points[pointi];
+            this.context.lineTo(pointx, pointy);
+        });
+        this.context.fill();
+    };
+
+    model.edges.forEach(edge => {
+        let p1 = points[edge[0]];
+        let p2 = points[edge[1]];
+        if (p1 == null || p2 == null)
+            return
+        let x1, y1, x2, y2;
+        [x1, y1] = p1;
+        [x2, y2] = p2;
+        this.context.beginPath();
+        this.context.moveTo(x1, y1);
+        this.context.lineTo(x2, y2);
+        this.context.stroke();
+    });
+};
+
+Game.prototype.render = function() {
+
+    requestAnimationFrame(this.render.bind(this));
+
+    this.tick();
+
+    // sky
+    this.context.fillStyle = '#B0E2FF';
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height/2);
+
+    // ground
+    this.context.fillStyle = '#7D441D';
+    this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
+
+    this.models.forEach(this.show.bind(this));
+};
+
+new Game();
+
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/opengl-perspective-projection-matrix
+// http://www.codinglabs.net/article_world_view_projection_matrix.aspx
+// http://www.songho.ca/opengl/gl_projectionmatrix.html
+// http://relativity.net.au/gaming/java/depth.html
