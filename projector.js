@@ -2,6 +2,7 @@ function Projector(width, height, near, far) {
     this.updateAspect(width, height);
     this.near = near;
     this.far = far;
+    this.frustrumPlanes = [];
 }
 
 Projector.prototype.updateAspect = function(width, height) {
@@ -24,14 +25,14 @@ Projector.prototype.updateAspect = function(width, height) {
 Projector.prototype.project = function(vec) {
         let [x, y, z] = vec;
 
-        if (z < this.near || z > this.far)
-            return null;
+        // if (z < this.near || z > this.far)
+        //     return null;
 
         x = this.near * x / z;
         y = this.near * y / z;
 
-        if (x > this.xViewMax || x < this.xViewMin || y > this.yViewMax || y < this.yViewMin)
-            return null;
+        // if (x > this.xViewMax || x < this.xViewMin || y > this.yViewMax || y < this.yViewMin)
+        //     return null;
 
         x += this.xViewMax;
         y += this.yViewMax;

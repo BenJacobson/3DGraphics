@@ -1,6 +1,6 @@
 function Camara() {
 	this.x = 0;
-	this.y = -1.3;
+	this.y = -2.3;
 	this.z = 0;
 	this.rotx = 0;
 	this.roty = 0;

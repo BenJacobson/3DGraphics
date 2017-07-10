@@ -14,12 +14,7 @@ function Cube(x, y, z) {
         [x-1, y-1, z+1]
     ];
 
-    this.colors = [
-        '#00FFFF',
-        '#FF0000',
-        '#0000FF',
-        '#00FF00'
-    ]
+    this.color = '#111144';
 };
 
 Cube.prototype.edges = [

@@ -8,7 +8,7 @@ function Game() {
     this.velocity = 0;
     this.acceleration = 0;
 
-    this.models = [new Cube(0, 0, 10), new Cube(0, 0, -10), new Cube(10, 0, 0), new Cube(-10, 0, 0)];
+    this.models = [new Road(), new Cube(0, -1, -10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
 
     document.body.onkeydown = (event) => {
         this.keysPressed[event.key] = true;
@@ -57,11 +57,11 @@ Game.prototype.tick = function() {
     if (this.keysPressed['ArrowDown']) {
         
     }
+    
     if (this.keysPressed[' '] && this.cam.y == -1.3) {
         this.velocity = -1;
         this.acceleration = 0.1;
     }
-
     this.cam.y += this.velocity;
     this.velocity += this.acceleration
     if (this.cam.y > -1.3) {
@@ -73,10 +73,10 @@ Game.prototype.tick = function() {
 Game.prototype.show = function(model) {
     this.context.strokeStyle = '#BBBBFF';
 
-    let points = model.verts.map(worldVec => {
-        let viewVec = this.cam.lookAt(worldVec);
-        let projectedVec = this.projector.project(viewVec)
-        return projectedVec;
+    let points = model.verts.map(worldVert => {
+        let viewVert = this.cam.lookAt(worldVert);
+        let projectedVert = this.projector.project(viewVert)
+        return projectedVert;
     });
 
     if (points.some(p => p === null))
@@ -85,7 +85,7 @@ Game.prototype.show = function(model) {
     for (let i = 0; i < model.sides.length; i++) {
         let side = model.sides[i];
         let [endx, endy] = points[side[side.length - 1]];
-        this.context.fillStyle = '#111144'; // this.colors[i];
+        this.context.fillStyle = model.color;
         this.context.beginPath();
         this.context.moveTo(endx, endy);
         side.forEach(pointi => {
@@ -110,6 +110,42 @@ Game.prototype.show = function(model) {
     });
 };
 
+Game.prototype.clipShow = function(model) {
+
+    let viewVerts = model.verts.map(worldVert => {
+        return this.cam.lookAt(worldVert);
+    });
+
+    let viewSides = model.sides.map(side => {
+        return side.map(i => viewVerts[i]);
+    });
+
+    let clippedSides = viewSides.map(viewSide => {
+        this.projector.frustrumPlanes.forEach(clipPlane => {
+            viewSide = Clipper.suthHodgClip(viewSide, clipPlane);
+        });
+        return viewSide;
+    });
+
+    let projectedSides = clippedSides.map(clippedSide => {
+        return clippedSide.map(clippedPoint => {
+            return this.projector.project(clippedPoint);
+        });
+    });
+
+    this.context.fillStyle = model.color;
+    projectedSides.forEach(side => {
+        let [endx, endy] = side[side.length - 1];
+        this.context.beginPath();
+        this.context.moveTo(endx, endy);
+        side.forEach(vert => {
+            let [vertx, verty] = vert;
+            this.context.lineTo(vertx, verty);
+        });
+        this.context.fill();
+    });
+};
+ 
 Game.prototype.render = function() {
 
     requestAnimationFrame(this.render.bind(this));
@@ -124,7 +160,7 @@ Game.prototype.render = function() {
     this.context.fillStyle = '#7D441D';
     this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
 
-    this.models.forEach(this.show.bind(this));
+    this.models.forEach(this.clipShow.bind(this));
 };
 
 new Game();
