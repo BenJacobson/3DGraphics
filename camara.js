@@ -11,16 +11,16 @@ Camara.prototype.moveForward = function() {
 	let x, z;
 	z = Math.sin(this.rotx + this.piHalf);
 	x = -Math.cos(this.rotx + this.piHalf);
-	this.x += x;
-	this.z += z;
+	this.x -= x;
+	this.z -= z;
 }
 
 Camara.prototype.moveBackward = function() {
     let x, z;
     z = Math.sin(this.rotx + this.piHalf);
     x = -Math.cos(this.rotx + this.piHalf);
-    this.x -= x;
-    this.z -= z;
+    this.x += x;
+    this.z += z;
 }
 
 Camara.prototype.moveLeft = function() {
@@ -46,11 +46,11 @@ Camara.prototype.rotate = function(a, b, rad) {
 }
 
 Camara.prototype.rotateLeft = function() {
-	this.rotx -= 0.02;
+	this.rotx += 0.02;
 }
 
 Camara.prototype.rotateRight = function() {
-	this.rotx += 0.02;
+	this.rotx -= 0.02;
 }
 
 Camara.prototype.lookAt = function(vec) {

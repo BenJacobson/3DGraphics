@@ -4,11 +4,13 @@ function Game() {
     this.context = this.canvas.getContext('2d');
     this.keysPressed = {};
     this.cam = new Camara();
-    this.projector = new Projector(0, 0, 2, 250);
+    let near = 2;
+    let far = 250;
+    this.projector = new Projector(0, 0, near, far);
     this.velocity = 0;
     this.acceleration = 0;
 
-    this.models = [new Road(), new Cube(0, -1, -10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
+    this.models = [new Road()]; // , new Cube(0, -1, 10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
 
     document.body.onkeydown = (event) => {
         this.keysPressed[event.key] = true;
@@ -21,13 +23,13 @@ function Game() {
     document.body.onresize = () => {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        this.projector.updateAspect(this.canvas.width, this.canvas.height);
+        this.projector.reset(this.canvas.width, this.canvas.height, near, far);
     };
 
     window.onload = () => {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        this.projector.updateAspect(this.canvas.width, this.canvas.height);
+        this.projector.reset(this.canvas.width, this.canvas.height, near, far);
         this.render();
     }
 }
@@ -96,13 +98,8 @@ Game.prototype.show = function(model) {
     };
 
     model.edges.forEach(edge => {
-        let p1 = points[edge[0]];
-        let p2 = points[edge[1]];
-        if (p1 == null || p2 == null)
-            return
-        let x1, y1, x2, y2;
-        [x1, y1] = p1;
-        [x2, y2] = p2;
+        let [x1, y1] = points[edge[0]];
+        let [x2, y2] = points[edge[1]];
         this.context.beginPath();
         this.context.moveTo(x1, y1);
         this.context.lineTo(x2, y2);
@@ -120,17 +117,8 @@ Game.prototype.clipShow = function(model) {
         return side.map(i => viewVerts[i]);
     });
 
-    let clippedSides = viewSides.map(viewSide => {
-        this.projector.frustrumPlanes.forEach(clipPlane => {
-            viewSide = Clipper.suthHodgClip(viewSide, clipPlane);
-        });
-        return viewSide;
-    });
-
-    let projectedSides = clippedSides.map(clippedSide => {
-        return clippedSide.map(clippedPoint => {
-            return this.projector.project(clippedPoint);
-        });
+    let projectedSides = viewSides.map(viewSide => {
+        return this.projector.project(viewSide);
     });
 
     this.context.fillStyle = model.color;
