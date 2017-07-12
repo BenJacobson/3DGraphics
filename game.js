@@ -10,7 +10,7 @@ function Game() {
     this.velocity = 0;
     this.acceleration = 0;
 
-    this.models = [new Road()]; // , new Cube(0, -1, 10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
+    this.models = [new Road(), new Cube(0, -1, 10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
 
     document.body.onkeydown = (event) => {
         this.keysPressed[event.key] = true;
@@ -73,41 +73,6 @@ Game.prototype.tick = function() {
 }
 
 Game.prototype.show = function(model) {
-    this.context.strokeStyle = '#BBBBFF';
-
-    let points = model.verts.map(worldVert => {
-        let viewVert = this.cam.lookAt(worldVert);
-        let projectedVert = this.projector.project(viewVert)
-        return projectedVert;
-    });
-
-    if (points.some(p => p === null))
-         return;
-
-    for (let i = 0; i < model.sides.length; i++) {
-        let side = model.sides[i];
-        let [endx, endy] = points[side[side.length - 1]];
-        this.context.fillStyle = model.color;
-        this.context.beginPath();
-        this.context.moveTo(endx, endy);
-        side.forEach(pointi => {
-            let [pointx, pointy] = points[pointi];
-            this.context.lineTo(pointx, pointy);
-        });
-        this.context.fill();
-    };
-
-    model.edges.forEach(edge => {
-        let [x1, y1] = points[edge[0]];
-        let [x2, y2] = points[edge[1]];
-        this.context.beginPath();
-        this.context.moveTo(x1, y1);
-        this.context.lineTo(x2, y2);
-        this.context.stroke();
-    });
-};
-
-Game.prototype.clipShow = function(model) {
 
     let viewVerts = model.verts.map(worldVert => {
         return this.cam.lookAt(worldVert);
@@ -123,6 +88,10 @@ Game.prototype.clipShow = function(model) {
 
     this.context.fillStyle = model.color;
     projectedSides.forEach(side => {
+        if (side.length == 0) {
+            // completly off-screen
+            return;
+        }
         let [endx, endy] = side[side.length - 1];
         this.context.beginPath();
         this.context.moveTo(endx, endy);
@@ -148,12 +117,7 @@ Game.prototype.render = function() {
     this.context.fillStyle = '#7D441D';
     this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
 
-    this.models.forEach(this.clipShow.bind(this));
+    this.models.forEach(this.show.bind(this));
 };
 
 new Game();
-
-// https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/opengl-perspective-projection-matrix
-// http://www.codinglabs.net/article_world_view_projection_matrix.aspx
-// http://www.songho.ca/opengl/gl_projectionmatrix.html
-// http://relativity.net.au/gaming/java/depth.html
