@@ -2,6 +2,8 @@ function Game() {
     this.canvas = document.createElement('canvas');
     document.body.append(this.canvas);
     this.context = this.canvas.getContext('2d');
+    this.fpsElement = this.createFpsElement();
+    document.body.append(this.fpsElement);
     this.keysPressed = {};
     this.cam = new Camara();
     let near = 2;
@@ -9,8 +11,17 @@ function Game() {
     this.projector = new Projector(0, 0, near, far);
     this.velocity = 0;
     this.acceleration = 0;
+    this.lastFrameTime = Date.now();
+    this.frameCount = 0;
+    this.frameRate = 0;
 
-    this.models = [new Road(), new Cube(0, -1, 10), new Cube(10, -1, 0), new Cube(-10, -1, 0)];
+    this.models = [new Road()];
+
+    for (let i = 0; i < 1000; i++) {
+        let x = Math.floor(Math.random() * 2000) - 1000;
+        let z = Math.floor(Math.random() * 2000) - 1000;
+        this.models.push(new Cube(x, -1, z));
+    }
 
     document.body.onkeydown = (event) => {
         this.keysPressed[event.key] = true;
@@ -33,6 +44,14 @@ function Game() {
         this.render();
     }
 }
+
+Game.prototype.createFpsElement = function() {
+    let fpsElement = document.createElement('div');
+    fpsElement.style.position = 'absolute';
+    fpsElement.style.top = 10;
+    fpsElement.style.right = 10;
+    return fpsElement;
+};
 
 Game.prototype.tick = function() {
     if (this.keysPressed['w']) {
@@ -102,6 +121,17 @@ Game.prototype.show = function(model) {
         this.context.fill();
     });
 };
+
+Game.prototype.calcFrameRate = function() {
+    this.frameCount++;
+    let now = Date.now();
+    if (now - this.lastFrameTime >= 1000) {
+        this.frameRate = this.frameCount;
+        this.lastFrameTime = now;
+        this.frameCount = 0;
+    }
+    return this.frameRate;
+};
  
 Game.prototype.render = function() {
 
@@ -118,6 +148,8 @@ Game.prototype.render = function() {
     this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
 
     this.models.forEach(this.show.bind(this));
+
+    this.fpsElement.innerText = this.calcFrameRate() + ' FPS';
 };
 
 new Game();
