@@ -14,7 +14,16 @@ function Cube(x, y, z) {
         [x-1, y-1, z+1]
     ];
 
-    this.color = '#111144';
+    this.colors = [
+        '#FF0000',
+        '#00FF00',
+        '#0000FF',
+        '#FFFF00'
+    ];
+
+    this.faces = this.sides.map((side, i) => {
+        return new Polygon(side.map(s => this.verts[s]), this.colors[i]);
+    });
 };
 
 Cube.prototype.edges = [
@@ -39,4 +48,4 @@ Cube.prototype.sides = [
     [0, 1, 2, 3],
     // [],
     // []
-];
+]

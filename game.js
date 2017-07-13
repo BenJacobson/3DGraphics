@@ -4,6 +4,8 @@ function Game() {
     this.context = this.canvas.getContext('2d');
     this.fpsElement = this.createFpsElement();
     document.body.append(this.fpsElement);
+    this.xyzElement = this.createXyzElement();
+    document.body.append(this.xyzElement);
     this.keysPressed = {};
     this.cam = new Camara();
     let near = 2;
@@ -15,7 +17,7 @@ function Game() {
     this.frameCount = 0;
     this.frameRate = 0;
 
-    this.models = [new Road()];
+    this.models = [];
 
     for (let i = 0; i < 1000; i++) {
         let x = Math.floor(Math.random() * 2000) - 1000;
@@ -44,6 +46,14 @@ function Game() {
         this.render();
     }
 }
+
+Game.prototype.createXyzElement = function() {
+    let xyxElement = document.createElement('div');
+    xyxElement.style.position = 'absolute';
+    xyxElement.style.top = 10;
+    xyxElement.style.left = 10;
+    return xyxElement;
+};
 
 Game.prototype.createFpsElement = function() {
     let fpsElement = document.createElement('div');
@@ -91,37 +101,6 @@ Game.prototype.tick = function() {
     }
 }
 
-Game.prototype.show = function(model) {
-
-    let viewVerts = model.verts.map(worldVert => {
-        return this.cam.lookAt(worldVert);
-    });
-
-    let viewSides = model.sides.map(side => {
-        return side.map(i => viewVerts[i]);
-    });
-
-    let projectedSides = viewSides.map(viewSide => {
-        return this.projector.project(viewSide);
-    });
-
-    this.context.fillStyle = model.color;
-    projectedSides.forEach(side => {
-        if (side.length == 0) {
-            // completly off-screen
-            return;
-        }
-        let [endx, endy] = side[side.length - 1];
-        this.context.beginPath();
-        this.context.moveTo(endx, endy);
-        side.forEach(vert => {
-            let [vertx, verty] = vert;
-            this.context.lineTo(vertx, verty);
-        });
-        this.context.fill();
-    });
-};
-
 Game.prototype.calcFrameRate = function() {
     this.frameCount++;
     let now = Date.now();
@@ -147,9 +126,17 @@ Game.prototype.render = function() {
     this.context.fillStyle = '#7D441D';
     this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
 
-    this.models.forEach(this.show.bind(this));
+    let faces2D = this.models.map(model => model.faces);
+    let flatFaces = Array.prototype.concat.apply([], faces2D);
+    flatFaces.forEach(face => face.view(this.cam));
+    flatFaces.sort((a, b) => b.viewDistance() - a.viewDistance());
+    flatFaces.forEach(face => face.project(this.projector));
+    facesToShow = flatFaces.filter(face => face.projectedFace.length > 0);
+    facesToShow.forEach(face => face.show(this.context));
+
 
     this.fpsElement.innerText = this.calcFrameRate() + ' FPS';
+    this.xyzElement.innerText = `X:${Math.round(this.cam.x)} Y:${Math.round(this.cam.y)} Z:${Math.round(this.cam.z)}`;
 };
 
 new Game();
