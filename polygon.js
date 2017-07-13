@@ -7,16 +7,25 @@ function Polygon(face, color) {
 
 Polygon.prototype.view = function(cam) {
 	this.viewFace = this.face.map(vert => cam.lookAt(vert));
+	this.viewDistanceCache = undefined;
 }
 
 Polygon.prototype.viewDistance = function() {
-	if (this.viewFace.length == 0) return 0;
-    let d = this.viewFace.reduce((vSum, vert) => {
-        return vSum + (vert.reduce((cSum, coord) => {
-            return cSum + (coord * coord);
-        }, 0) / vert.length);
-    }, 0) / this.viewFace.length;
-    return d;
+	if (!this.viewDistanceCache) {
+		this.viewDistanceCache = this.viewFace.length != 0 ?
+		    this.viewFace.reduce((vSum, vert) => {
+		        return vSum + (vert.reduce((cSum, coord) => {
+		            return cSum + (coord * coord);
+		        }, 0) / vert.length);
+		    }, 0) / this.viewFace.length :
+		    0;
+	}
+	return this.viewDistanceCache;
+};
+
+Polygon.prototype.clip = function(clipper, planes) {
+	this.viewFace = clipper.clip(this.viewFace, planes);
+	this.viewDistanceCache = undefined;
 };
 
 Polygon.prototype.project = function(projector) {

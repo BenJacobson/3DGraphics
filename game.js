@@ -129,9 +129,10 @@ Game.prototype.render = function() {
     let faces2D = this.models.map(model => model.faces);
     let flatFaces = Array.prototype.concat.apply([], faces2D);
     flatFaces.forEach(face => face.view(this.cam));
-    flatFaces.sort((a, b) => b.viewDistance() - a.viewDistance());
-    flatFaces.forEach(face => face.project(this.projector));
-    facesToShow = flatFaces.filter(face => face.projectedFace.length > 0);
+    flatFaces.forEach(face => face.clip(Clipper, this.projector.frustrumPlanes));
+    let facesToShow = flatFaces.filter(face => face.viewFace.length > 0);
+    facesToShow.sort((a, b) => b.viewDistance() - a.viewDistance());
+    facesToShow.forEach(face => face.project(this.projector));
     facesToShow.forEach(face => face.show(this.context));
 
 

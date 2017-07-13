@@ -58,22 +58,19 @@ Projector.prototype._initFrustrumPlanes = function() {
     ];
 }
 
-Projector.prototype._projectPoint = function(vert) {
-    let [x, y, z] = vert;
+Projector.prototype.project = function(face) {
+    return face.map(vert => {
+        let [x, y, z] = vert;
 
-    let px = this.near * x / -z;
-    let py = this.near * y / -z;
+        let px = this.near * x / -z;
+        let py = this.near * y / -z;
 
-    px += this.xViewMax;
-    py += this.yViewMax;
+        px += this.xViewMax;
+        py += this.yViewMax;
 
-    px *= this.width / (2 * this.xViewMax);
-    py *= this.height / (2 * this.yViewMax);
+        px *= this.width / (2 * this.xViewMax);
+        py *= this.height / (2 * this.yViewMax);
 
-    return [px, py];
-}
-
-Projector.prototype.project = function(polygon) {
-        let clippedVerts = Clipper.clip(polygon, this.frustrumPlanes); // do clipping here
-        return clippedVerts.map(this._projectPoint.bind(this));
+        return [px, py];
+    });
 }
