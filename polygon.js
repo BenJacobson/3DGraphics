@@ -1,35 +1,30 @@
-function Polygon(face, color) {
-	this.face = face;
-	this.viewFace = [];
+function Polygon(viewFace, color) {
+	this.viewFace = viewFace;
+	this.clipFace = [];
 	this.projectedFace = [];
 	this.color = color;
 };
 
-Polygon.prototype.view = function(cam) {
-	this.viewFace = this.face.map(vert => cam.lookAt(vert));
-	this.viewDistanceCache = undefined;
-}
-
-Polygon.prototype.viewDistance = function() {
-	if (!this.viewDistanceCache) {
-		this.viewDistanceCache = this.viewFace.length != 0 ?
-		    this.viewFace.reduce((vSum, vert) => {
+Polygon.prototype.clipDistance = function() {
+	if (!this.clipDistanceCache) {
+		this.clipDistanceCache = this.clipFace.length != 0 ?
+		    this.clipFace.reduce((vSum, vert) => {
 		        return vSum + (vert.reduce((cSum, coord) => {
 		            return cSum + (coord * coord);
 		        }, 0) / vert.length);
-		    }, 0) / this.viewFace.length :
+		    }, 0) / this.clipFace.length :
 		    0;
 	}
-	return this.viewDistanceCache;
+	return this.clipDistanceCache;
 };
 
 Polygon.prototype.clip = function(clipper, planes) {
-	this.viewFace = clipper.clip(this.viewFace, planes);
-	this.viewDistanceCache = undefined;
+	this.clipFace = clipper.clip(this.viewFace, planes);
+	this.clipDistanceCache = undefined;
 };
 
 Polygon.prototype.project = function(projector) {
-	this.projectedFace = projector.project(this.viewFace);
+	this.projectedFace = projector.project(this.clipFace);
 };
 
 Polygon.prototype.show = function(context) {

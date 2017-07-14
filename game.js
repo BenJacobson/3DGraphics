@@ -9,7 +9,7 @@ function Game() {
     this.keysPressed = {};
     this.cam = new Camara();
     let near = 2;
-    let far = 250;
+    let far = 500;
     this.projector = new Projector(0, 0, near, far);
     this.velocity = 0;
     this.acceleration = 0;
@@ -17,11 +17,12 @@ function Game() {
     this.frameCount = 0;
     this.frameRate = 0;
 
-    this.models = [];
+    this.models = [new Road()];
 
     for (let i = 0; i < 1000; i++) {
-        let x = Math.floor(Math.random() * 2000) - 1000;
-        let z = Math.floor(Math.random() * 2000) - 1000;
+        let x = Math.floor(Math.random() * 1000) - 500;
+        let y = Math.floor(Math.random() * 1000) - 500;
+        let z = Math.floor(Math.random() * 1000) - 500;
         this.models.push(new Cube(x, -1, z));
     }
 
@@ -48,11 +49,12 @@ function Game() {
 }
 
 Game.prototype.createXyzElement = function() {
-    let xyxElement = document.createElement('div');
-    xyxElement.style.position = 'absolute';
-    xyxElement.style.top = 10;
-    xyxElement.style.left = 10;
-    return xyxElement;
+    let xyzElement = document.createElement('div');
+    xyzElement.style.position = 'absolute';
+    xyzElement.style.top = 10;
+    xyzElement.style.left = 10;
+    // xyzElement.style.color = 'white';
+    return xyzElement;
 };
 
 Game.prototype.createFpsElement = function() {
@@ -126,12 +128,11 @@ Game.prototype.render = function() {
     this.context.fillStyle = '#7D441D';
     this.context.fillRect(0, this.canvas.height/2, this.canvas.width, this.canvas.height);
 
-    let faces2D = this.models.map(model => model.faces);
+    let faces2D = this.models.map(model => model.getFaces(this.cam));
     let flatFaces = Array.prototype.concat.apply([], faces2D);
-    flatFaces.forEach(face => face.view(this.cam));
     flatFaces.forEach(face => face.clip(Clipper, this.projector.frustrumPlanes));
-    let facesToShow = flatFaces.filter(face => face.viewFace.length > 0);
-    facesToShow.sort((a, b) => b.viewDistance() - a.viewDistance());
+    let facesToShow = flatFaces.filter(face => face.clipFace.length > 0);
+    facesToShow.sort((a, b) => b.clipDistance() - a.clipDistance());
     facesToShow.forEach(face => face.project(this.projector));
     facesToShow.forEach(face => face.show(this.context));
 

@@ -13,18 +13,16 @@ function Cube(x, y, z) {
         [x+1, y-1, z+1],
         [x-1, y-1, z+1]
     ];
-
-    this.colors = [
-        '#FF0000',
-        '#00FF00',
-        '#0000FF',
-        '#FFFF00'
-    ];
-
-    this.faces = this.sides.map((side, i) => {
-        return new Polygon(side.map(s => this.verts[s]), this.colors[i]);
-    });
 };
+
+Cube.prototype.colors = [
+    '#FF0000',
+    '#00FF00',
+    '#0000FF',
+    '#FFFF00',
+    '#00FFFF',
+    '#FF00FF'
+];
 
 Cube.prototype.edges = [
     [0, 1],
@@ -46,6 +44,15 @@ Cube.prototype.sides = [
     [0, 1, 5, 4],
     [2, 3, 7, 6],
     [0, 1, 2, 3],
-    // [],
-    // []
+    [1, 2, 6, 5],
+    [3, 0, 4, 7]
 ]
+
+Cube.prototype.getFaces = function(cam) {
+    let viewVerts = this.verts.map(vert => {
+        return cam.lookAt(vert);
+    });
+    return this.sides.map((side, i) => {
+        return new Polygon(side.map(s => viewVerts[s]), this.colors[i]);
+    });
+};

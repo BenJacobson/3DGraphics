@@ -2,11 +2,13 @@ function Clipper() {}
 
 Clipper.prototype.clip = function(polygonVerts, planes) {
     let output = polygonVerts;
-    planes.forEach(plane => {
+    for (let i = 0; i < planes.length; i++) {
+        if (output.length == 0) break;
+        let plane = planes[i];
         let input = output;
         output = [];
         let startPoint = input[input.length - 1];
-        input.forEach(endPoint =>{
+        input.forEach(endPoint => {
             let startPointInside = plane.isInside(startPoint);
             let endPointInside = plane.isInside(endPoint);
             if (startPointInside && endPointInside) {
@@ -19,7 +21,7 @@ Clipper.prototype.clip = function(polygonVerts, planes) {
             }
             startPoint = endPoint;
         });
-    });
+    };
     return output
 }
 
