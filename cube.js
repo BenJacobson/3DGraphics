@@ -3,16 +3,7 @@ function Cube(x, y, z) {
     this.y = y;
     this.z = z;
 
-    this.verts = [
-        [x-1, y+1, z-1],
-        [x+1, y+1, z-1],
-        [x+1, y-1, z-1],
-        [x-1, y-1, z-1],
-        [x-1, y+1, z+1],
-        [x+1, y+1, z+1],
-        [x+1, y-1, z+1],
-        [x-1, y-1, z+1]
-    ];
+    this.worldVerts = this.verts.map(v => [v[0]+x, v[1]+y, v[2]+z]);
 };
 
 Cube.prototype.colors = [
@@ -22,6 +13,17 @@ Cube.prototype.colors = [
     '#FFFF00',
     '#00FFFF',
     '#FF00FF'
+];
+
+Cube.prototype.verts = [
+    [-1, +1, -1],
+    [+1, +1, -1],
+    [+1, -1, -1],
+    [-1, -1, -1],
+    [-1, +1, +1],
+    [+1, +1, +1],
+    [+1, -1, +1],
+    [-1, -1, +1]
 ];
 
 Cube.prototype.edges = [
@@ -49,7 +51,7 @@ Cube.prototype.sides = [
 ]
 
 Cube.prototype.getFaces = function(cam) {
-    let viewVerts = this.verts.map(vert => {
+    let viewVerts = this.worldVerts.map(vert => {
         return cam.lookAt(vert);
     });
     return this.sides.map((side, i) => {

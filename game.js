@@ -17,7 +17,7 @@ function Game() {
     this.frameCount = 0;
     this.frameRate = 0;
 
-    this.models = [new Road()];
+    this.models = [new Wheel(20)];
 
     for (let i = 0; i < 1000; i++) {
         let x = Math.floor(Math.random() * 1000) - 500;
@@ -45,7 +45,7 @@ function Game() {
         this.canvas.height = window.innerHeight;
         this.projector.reset(this.canvas.width, this.canvas.height, near, far);
         this.render();
-    }
+    };
 }
 
 Game.prototype.createXyzElement = function() {
