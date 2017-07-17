@@ -17,7 +17,7 @@ function Game() {
     this.frameCount = 0;
     this.frameRate = 0;
 
-    this.models = [new Wheel(20)];
+    this.models = [new Kart()];
 
     for (let i = 0; i < 1000; i++) {
         let x = Math.floor(Math.random() * 1000) - 500;
